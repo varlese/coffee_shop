@@ -1,12 +1,9 @@
-import os
+import click, json, os, re, types
 from flask import Flask, request, jsonify, abort
-from sqlalchemy import exc
-import json
 from flask_cors import CORS
+from sqlalchemy import exc
 from .database.models import db, setup_db, Drink
 from .auth.auth import AuthError, requires_auth
-import click
-
 
 ## ---------------------------------------------------------
 ## Config
@@ -29,84 +26,143 @@ def db_create():
     db.create_all()
 
 ## ---------------------------------------------------------
+## Utils
+## ---------------------------------------------------------
+
+# Validates hex color input.
+def is_valid_hex_color(color):
+    return re.search(r'^#(?:[0-9a-fA-F]{3}){1,2}$', color)
+
+# Checks for valid drink recipe part.
+def is_valid_recipe_part(part):
+    if type(part) is not dict:
+        return False
+
+    # Sets default number of parts.
+    default_parts = 1 
+    if 'color' not in part and not is_valid_hex_color(part['color']):
+        return False
+    if 'name' not in part:
+        return False
+    if 'parts' not in part and not is_integer(part['parts']):
+        return False
+    
+    return True
+
+## ---------------------------------------------------------
 ## ROUTES
 ## ---------------------------------------------------------
 
-'''
-@TODO implement endpoint
-    GET /drinks
-        it should be a public endpoint
-        it should contain only the drink.short() data representation
-    returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
-        or appropriate status code indicating reason for failure
-'''
+# Endpoint for short-form of drinks menu.
 @app.route('/drinks', methods=['GET'])
 def get_drinks():
     drinks = Drink.query.all()
-    print(drinks)
-    
+
     if not drinks:
         abort(404)
 
     return jsonify({
         'success': True,
-        'drinks': drinks.short(),
+        'drinks': [drink.short() for drink in drinks]
     }), 200
 
+# Endpoint for long form of drinks menu.
+@app.route('/drinks-detail', methods=['GET'])
+def get_drinks_detailed():
+    drinks = Drink.query.all()
+    if not drinks:
+      abort(404)
 
-'''
-@TODO implement endpoint
-    GET /drinks-detail
-        it should require the 'get:drinks-detail' permission
-        it should contain the drink.long() data representation
-    returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
-        or appropriate status code indicating reason for failure
-'''
-# @app.route('/drinks-detail', methods=['GET'])
-# def get_drinks():
-#     drinks = Drink.query.all()
-#     if not drinks:
-#       abort(404)
-
-#     return jsonify({
-#       'success': True,
-#       'drinks': drinks.long(),
-#     }), 200
+    return jsonify({
+      'success': True,
+      'drinks': [drink.long() for drink in drinks],
+    }), 200
 
 '''
 @TODO implement endpoint
     POST /drinks
-        it should create a new row in the drinks table
         it should require the 'post:drinks' permission
-        it should contain the drink.long() data representation
-    returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the newly created drink
-        or appropriate status code indicating reason for failure
 '''
 
+# Endpoint to add new drink.
+@app.route('/drinks', methods=['POST'])
+def insert_drink():
+    data = request.get_json()
+
+    if 'title' not in data and not data['title']:
+        abort(422)
+    if 'recipe' not in data:
+        abort(422)
+    if type(data['recipe']) is not list:
+        abort(422)
+
+    for recipe_part in data['recipe']:
+        if not is_valid_recipe_part(recipe_part):
+            abort(422)
+
+    drink = Drink(title=data['title'], recipe=json.dumps(data['recipe']))
+    drink.insert()
+
+    return jsonify({
+        'success': True,
+        'drink': drink.long(),
+    }), 200
 
 '''
 @TODO implement endpoint
     PATCH /drinks/<id>
-        where <id> is the existing model id
-        it should respond with a 404 error if <id> is not found
-        it should update the corresponding row for <id>
         it should require the 'patch:drinks' permission
-        it should contain the drink.long() data representation
-    returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the updated drink
-        or appropriate status code indicating reason for failure
 '''
+# Endpoint to update existing drink.
+@app.route('/drinks/<int:drink_id>', methods=['PATCH'])
+def update_drink(drink_id):
+    if not drink_id:
+        abort(404)
 
+    drink = Drink.query.filter(Drink.id == drink_id).one_or_none()
+    if not drink:
+        abort(404)
+
+    data = request.get_json()
+
+    if 'title' in data and data['title']:
+        drink.title = data['title']
+
+    if 'recipe' in data and type(data['recipe']) is list:
+        for recipe_part in data['recipe']:
+            if not is_valid_recipe_part(recipe_part):
+                abort(422)
+        drink.recipe = data['recipe']
+
+    drink.update()
+
+    return jsonify({
+        'success': True,
+        'drink': drink.long(),
+    }), 200
 
 '''
 @TODO implement endpoint
     DELETE /drinks/<id>
-        where <id> is the existing model id
-        it should respond with a 404 error if <id> is not found
-        it should delete the corresponding row for <id>
         it should require the 'delete:drinks' permission
-    returns status code 200 and json {"success": True, "delete": id} where id is the id of the deleted record
-        or appropriate status code indicating reason for failure
 '''
+# Endpoint to delete drink object.
+@app.route('/drinks/<int:drink_id>', methods=['DELETE'])
+def delete_drink(drink_id):
+    if not drink_id:
+        abort(404)
+
+    drink_to_delete = Drink.query.get(drink_id)
+    if not drink_id:
+        abort(404)
+
+    drink_to_delete.delete()
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'delete': drink_id
+    }), 200
 
 ## ---------------------------------------------------------
 ## Error Handling

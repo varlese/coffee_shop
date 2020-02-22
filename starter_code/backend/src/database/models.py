@@ -8,20 +8,14 @@ project_dir = os.path.dirname(os.path.abspath(__file__))
 database_path = "sqlite:///{}".format(os.path.join(project_dir, database_filename))
 
 db = SQLAlchemy()
-'''
-setup_db(app)
-    binds a flask application and a SQLAlchemy service
-'''
+# setup_db(app): binds a flask application and a SQLAlchemy service
 def setup_db(app):
     app.config["SQLALCHEMY_DATABASE_URI"] = database_path
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db.app = app
     db.init_app(app)
 
-'''
-Drink
-a persistent drink entity, extends the base SQLAlchemy Model
-'''
+# Drink: a persistent drink entity, extends the base SQLAlchemy Model
 class Drink(db.Model):
     # Autoincrementing, unique primary key
     id = Column(Integer().with_variant(Integer, "sqlite"), primary_key=True)
@@ -31,10 +25,7 @@ class Drink(db.Model):
     # the required datatype is [{'color': string, 'name':string, 'parts':number}]
     recipe =  Column(String(180), nullable=False)
 
-    '''
-    short()
-        short form representation of the Drink model
-    '''
+    # short(): short form representation of the Drink model
     def short(self):
         print(json.loads(self.recipe))
         short_recipe = [{'color': r['color'], 'parts': r['parts']} for r in json.loads(self.recipe)]
@@ -44,10 +35,7 @@ class Drink(db.Model):
             'recipe': short_recipe
         }
 
-    '''
-    long()
-        long form representation of the Drink model
-    '''
+    #long(): long form representation of the Drink model
     def long(self):
         return {
             'id': self.id,
