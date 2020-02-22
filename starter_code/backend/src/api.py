@@ -3,22 +3,35 @@ from flask import Flask, request, jsonify, abort
 from sqlalchemy import exc
 import json
 from flask_cors import CORS
-
-from .database.models import db_drop_and_create_all, setup_db, Drink
+from .database.models import db, setup_db, Drink
 from .auth.auth import AuthError, requires_auth
+import click
+
+
+## ---------------------------------------------------------
+## Config
+## ---------------------------------------------------------
 
 app = Flask(__name__)
 setup_db(app)
 CORS(app)
 
-'''
-@TODO uncomment the following line to initialize the datbase
-!! NOTE THIS WILL DROP ALL RECORDS AND START YOUR DB FROM SCRATCH
-!! NOTE THIS MUST BE UNCOMMENTED ON FIRST RUN
-'''
-# db_drop_and_create_all()
+@app.cli.command('dbdrop')
+def db_drop():
+    """Drops database from command line."""
+    click.echo('Dropping all tables.')
+    db.drop_all()
 
+@app.cli.command('dbcreate')
+def db_create():
+    """Creates database from the command line."""
+    click.echo('Creating all tables.')
+    db.create_all()
+
+## ---------------------------------------------------------
 ## ROUTES
+## ---------------------------------------------------------
+
 '''
 @TODO implement endpoint
     GET /drinks
@@ -27,6 +40,18 @@ CORS(app)
     returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
         or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks', methods=['GET'])
+def get_drinks():
+    drinks = Drink.query.all()
+    print(drinks)
+    
+    if not drinks:
+        abort(404)
+
+    return jsonify({
+        'success': True,
+        'drinks': drinks.short(),
+    }), 200
 
 
 '''
@@ -37,7 +62,16 @@ CORS(app)
     returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
         or appropriate status code indicating reason for failure
 '''
+# @app.route('/drinks-detail', methods=['GET'])
+# def get_drinks():
+#     drinks = Drink.query.all()
+#     if not drinks:
+#       abort(404)
 
+#     return jsonify({
+#       'success': True,
+#       'drinks': drinks.long(),
+#     }), 200
 
 '''
 @TODO implement endpoint
@@ -74,37 +108,29 @@ CORS(app)
         or appropriate status code indicating reason for failure
 '''
 
-
+## ---------------------------------------------------------
 ## Error Handling
-'''
-Example error handling for unprocessable entity
-'''
+## ---------------------------------------------------------
+@app.errorhandler(401)
+def not_authorized(error):
+    return jsonify({
+        "success": False, 
+        "error": 401,
+        "message": "Authentication error."
+    }), 401
+
+@app.errorhandler(422)
+def not_found(error):
+    return jsonify({
+        "success": False, 
+        "error": 404,
+        "message": "Item not found."
+    }), 404
+
 @app.errorhandler(422)
 def unprocessable(error):
     return jsonify({
-                    "success": False, 
-                    "error": 422,
-                    "message": "unprocessable"
-                    }), 422
-
-'''
-@TODO implement error handlers using the @app.errorhandler(error) decorator
-    each error handler should return (with approprate messages):
-             jsonify({
-                    "success": False, 
-                    "error": 404,
-                    "message": "resource not found"
-                    }), 404
-
-'''
-
-'''
-@TODO implement error handler for 404
-    error handler should conform to general task above 
-'''
-
-
-'''
-@TODO implement error handler for AuthError
-    error handler should conform to general task above 
-'''
+        "success": False, 
+        "error": 422,
+        "message": "Request could not be processed."
+    }), 422
