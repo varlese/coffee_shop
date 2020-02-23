@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify, abort
 from flask_cors import CORS
 from sqlalchemy import exc
 from .database.models import db, setup_db, Drink
-from .auth.auth import AuthError, requires_auth
+from .auth.auth import AuthError, requires_auth, get_token_auth_header
 
 ## ---------------------------------------------------------
 ## Config
@@ -56,6 +56,7 @@ def is_valid_recipe_part(part):
 # Endpoint for short-form of drinks menu.
 @app.route('/drinks', methods=['GET'])
 def get_drinks():
+    get_token_auth_header()
     drinks = Drink.query.all()
 
     if not drinks:
@@ -175,7 +176,15 @@ def not_authorized(error):
         "message": "Authentication error."
     }), 401
 
-@app.errorhandler(422)
+@app.errorhandler(403)
+def forbidden(error):
+    return jsonify({
+        "success": False, 
+        "error": 403,
+        "message": "Forbidden."
+    }), 403
+
+@app.errorhandler(404)
 def not_found(error):
     return jsonify({
         "success": False, 

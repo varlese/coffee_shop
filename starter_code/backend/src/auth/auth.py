@@ -4,49 +4,127 @@ from functools import wraps
 from jose import jwt
 from urllib.request import urlopen
 
+## -------------------------------------
+## Utils
+## -------------------------------------
 
-AUTH0_DOMAIN = 'udacity-fsnd.auth0.com'
+AUTH0_DOMAIN = 'dev-j30osbgf.auth0.com'
 ALGORITHMS = ['RS256']
 API_AUDIENCE = 'dev'
+JWKS_URL = f'https://{AUTH0_DOMAIN}/.well-known/jwks.json'
 
-## AuthError Exception
-'''
-AuthError Exception
-A standardized way to communicate auth failure modes
-'''
+# Gets JSON data from URL
+# Source: https://www.datasciencelearner.com/how-to-get-json-data-from-url-in-python/ 
+def get_json_data(url):
+    operUrl = urlopen(url)
+    if(operUrl.getcode() != 200):
+        return False
+
+    data = operUrl.read()
+    jsonData = json.loads(data)
+    return jsonData
+
+## -------------------------------------
+## Authorization 
+## -------------------------------------
+
+# AuthError Exception
 class AuthError(Exception):
     def __init__(self, error, status_code):
         self.error = error
         self.status_code = status_code
 
-
-## Auth Header
-
-'''
-@TODO implement get_token_auth_header() method
-    it should attempt to get the header from the request
-        it should raise an AuthError if no header is present
-    it should attempt to split bearer and the token
-        it should raise an AuthError if the header is malformed
-    return the token part of the header
-'''
+# Gets Auth Header
 def get_token_auth_header():
-   raise Exception('Not Implemented')
+    auth_header = request.headers.get('Authorization', None)
+
+    if not auth_header:
+        raise AuthError({
+            'code': 'invalid_header',
+            'description': 'Authorization header not found.'
+        }, 401)
+
+    split_auth_header = auth_header.split(' ')
+
+    if len(split_auth_header) == 0:
+        raise AuthError({
+            'code': 'invalid_header',
+            'description': 'Invalid token header.'
+        }, 401)
+
+    if split_auth_header[0].lower() not 'bearer':
+        raise AuthError({
+            'code': 'invalid_header',
+            'description': 'Invalid token type.'
+        }, 401)
+
+    if not split_auth_header[1]:
+        raise AuthError({
+            'code': 'invalid_header',
+            'description': 'Empty Bearer token value.'
+        }, 401)
+
+    return split_auth_header[1]
+
 
 '''
-@TODO implement check_permissions(permission, payload) method
-    @INPUTS
-        permission: string permission (i.e. 'post:drink')
-        payload: decoded jwt payload
-
     it should raise an AuthError if permissions are not included in the payload
         !!NOTE check your RBAC settings in Auth0
     it should raise an AuthError if the requested permission string is not in the payload permissions array
     return true otherwise
 '''
 def check_permissions(permission, payload):
-    raise Exception('Not Implemented')
+    if 'permission' not in payload:
+        raise AuthError({
+            'code': 'invalid_payload',
+            'description': 'Invalid payload.'
+        }, 422)
 
+    if permission not in payload['permission']:
+        raise AuthError({
+            'code': 'forbidden',
+            'description': 'Request is forbidden.'
+        }, 403)
+    
+    return True
+
+# Fetches JSON web key set from Auth0 
+# Link: https://auth0.com/docs/tokens/concepts/jwks 
+def get_rsa_key(token):
+    jwks_data = get_json_data(JWKS_URL)
+
+    if not jwks_data:
+        raise AuthError({
+            'code': 'invalid_auth_api',
+            'description': 'Invalid authorization API.'
+        }, 422)
+
+    jwt_headers = jwt.get_unverified_headers()
+    if 'kid' not in jwt_headers:
+        raise AuthError({
+            'code': 'invalid_header',
+            'description': 'Missing "kid" header.'
+        }, 422)
+
+    rsa_key = None
+    for key in jwks_data['keys']:
+        if key['kid'] != jwt_headers['kid']:
+            continue
+        rsa_key = {
+            'kty': key['kty'],
+            'kid': key['kid'],
+            'use': key['use'],
+            'n': key['n'],
+            'e': key['e']
+        }
+
+    if not rsa_key:
+        raise AuthError({
+            'code': 'invalid_key',
+            'description': 'Unable to find the appropriate key.'
+        }, 401)
+
+    return rsa_key
 '''
 @TODO implement verify_decode_jwt(token) method
     @INPUTS
