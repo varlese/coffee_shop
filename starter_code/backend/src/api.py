@@ -68,7 +68,9 @@ def get_drinks():
     }), 200
 
 # Endpoint for long form of drinks menu.
+# Permission (Barista): get:drinks-detail
 @app.route('/drinks-detail', methods=['GET'])
+@requires_auth('get:drinks-detail')
 def get_drinks_detailed():
     drinks = Drink.query.all()
     if not drinks:
@@ -79,14 +81,10 @@ def get_drinks_detailed():
       'drinks': [drink.long() for drink in drinks],
     }), 200
 
-'''
-@TODO implement endpoint
-    POST /drinks
-        it should require the 'post:drinks' permission
-'''
-
 # Endpoint to add new drink.
+# Permission (Manager): post:drinks
 @app.route('/drinks', methods=['POST'])
+@requires_auth('post:drinks')
 def insert_drink():
     data = request.get_json()
 
@@ -109,13 +107,10 @@ def insert_drink():
         'drink': drink.long(),
     }), 200
 
-'''
-@TODO implement endpoint
-    PATCH /drinks/<id>
-        it should require the 'patch:drinks' permission
-'''
 # Endpoint to update existing drink.
+# Permission (Manager): patch:drinks
 @app.route('/drinks/<int:drink_id>', methods=['PATCH'])
+@requires_auth('patch:drinks')
 def update_drink(drink_id):
     if not drink_id:
         abort(404)
@@ -142,13 +137,10 @@ def update_drink(drink_id):
         'drink': drink.long(),
     }), 200
 
-'''
-@TODO implement endpoint
-    DELETE /drinks/<id>
-        it should require the 'delete:drinks' permission
-'''
 # Endpoint to delete drink object.
+# Permission (Manager): delete:drinks 
 @app.route('/drinks/<int:drink_id>', methods=['DELETE'])
+@requires_auth('delete:drinks')
 def delete_drink(drink_id):
     if not drink_id:
         abort(404)
@@ -199,3 +191,11 @@ def unprocessable(error):
         "error": 422,
         "message": "Request could not be processed."
     }), 422
+
+@app.errorhandler(AuthError)
+def auth_error(error):
+    return jsonify({
+        'success': False,
+        'error': error.status_code,
+        'message': error.error['description']
+    }), error.status_code

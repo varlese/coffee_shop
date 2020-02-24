@@ -28,13 +28,15 @@ def get_json_data(url):
 ## Authorization 
 ## -------------------------------------
 
-# AuthError Exception
+# Handles authentication errors to raise exceptions.
+# Returns: dictionary with error message and description.
 class AuthError(Exception):
     def __init__(self, error, status_code):
         self.error = error
         self.status_code = status_code
 
-# Gets Auth Header
+# Gets auth header.
+# Returns: split_auth_header (string)
 def get_token_auth_header():
     auth_header = request.headers.get('Authorization', None)
 
@@ -73,6 +75,10 @@ def get_token_auth_header():
     it should raise an AuthError if the requested permission string is not in the payload permissions array
     return true otherwise
 '''
+
+# Checks permission against the payload coming from Auth0.
+# For more: verify_decode_jwt()
+# Accepts: permission (string) and payload (dictionary).
 def check_permissions(permission, payload):
     if 'permission' not in payload:
         raise AuthError({
@@ -88,7 +94,9 @@ def check_permissions(permission, payload):
     
     return True
 
-# Fetches JSON web key set from Auth0 
+# Fetches JSON web key set from Auth0
+# Accepts: token (string)
+# Returns: rsa_key (dictionary)
 # Link: https://auth0.com/docs/tokens/concepts/jwks 
 def get_rsa_key(token):
     jwks_data = get_json_data(JWKS_URL)
@@ -125,32 +133,42 @@ def get_rsa_key(token):
         }, 401)
 
     return rsa_key
-'''
-@TODO implement verify_decode_jwt(token) method
-    @INPUTS
-        token: a json web token (string)
 
-    it should be an Auth0 token with key id (kid)
-    it should verify the token using Auth0 /.well-known/jwks.json
-    it should decode the payload from the token
-    it should validate the claims
-    return the decoded payload
-
-    !!NOTE urlopen has a common certificate error described here: https://stackoverflow.com/questions/50236117/scraping-ssl-certificate-verify-failed-error-for-http-en-wikipedia-org
-'''
+# Verification and decoding of JWT.
+# Receives: token (string)
+# Returns: payload (dictionary)
 def verify_decode_jwt(token):
-    raise Exception('Not Implemented')
+    rsa_key = get_rsa_key(token)
 
-'''
-@TODO implement @requires_auth(permission) decorator method
-    @INPUTS
-        permission: string permission (i.e. 'post:drink')
+    try:
+        payload = jwt.decode(
+            token,
+            rsa_key,
+            algorithms = ALGORITHMS,
+            audience = API_AUDIENCE,
+            issuer = f'https://{AUTH0_DOMAIN}/'
+        )
+        return payload
 
-    it should use the get_token_auth_header method to get the token
-    it should use the verify_decode_jwt method to decode the jwt
-    it should use the check_permissions method validate claims and check the requested permission
-    return the decorator which passes the decoded payload to the decorated method
-'''
+    except jwt.ExpireSignatureError:
+        raise AuthError({
+            'code': 'expired_token',
+            'description': 'Token has expired.'
+        }, 401)
+
+    except Exception:
+        raise AuthError({
+            'code': 'invalid_token',
+             'description': 'Token is invalid.'
+        }, 422)
+
+    except jwt.JWTClaimsError:
+        raise AuthError({
+            'code': 'invalid_decode',
+            'description': 'Invalid decode configuration.'
+        }, 422)
+
+# Decorator to check permissions and authentication on endpoints.
 def requires_auth(permission=''):
     def requires_auth_decorator(f):
         @wraps(f)
