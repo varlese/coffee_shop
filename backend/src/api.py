@@ -104,7 +104,7 @@ def insert_drink():
 
     return jsonify({
         'success': True,
-        'drink': drink.long(),
+        'drinks': drink.long(),
     }), 200
 
 # Endpoint to update existing drink.
@@ -115,7 +115,7 @@ def update_drink(drink_id):
     if not drink_id:
         abort(404)
 
-    drink = Drink.query.filter(Drink.id == drink_id).one_or_none()
+    drink = Drink.query.get(drink_id)
     if not drink:
         abort(404)
 
@@ -128,13 +128,13 @@ def update_drink(drink_id):
         for recipe_part in data['recipe']:
             if not is_valid_recipe_part(recipe_part):
                 abort(422)
-        drink.recipe = data['recipe']
+        drink.recipe = json.dumps(data['recipe'])
 
     drink.update()
 
     return jsonify({
         'success': True,
-        'drink': drink.long(),
+        'drinks': drink.long(),
     }), 200
 
 # Endpoint to delete drink object.

@@ -54,7 +54,7 @@ def get_token_auth_header():
             'description': 'Invalid token header.'
         }, 401)
 
-    if split_auth_header[0].lower() not 'bearer':
+    if split_auth_header[0].lower() != 'bearer':
         raise AuthError({
             'code': 'invalid_header',
             'description': 'Invalid token type.'
@@ -80,13 +80,13 @@ def get_token_auth_header():
 # For more: verify_decode_jwt()
 # Accepts: permission (string) and payload (dictionary).
 def check_permissions(permission, payload):
-    if 'permission' not in payload:
+    if 'permissions' not in payload:
         raise AuthError({
             'code': 'invalid_payload',
             'description': 'Invalid payload.'
         }, 422)
 
-    if permission not in payload['permission']:
+    if permission not in payload['permissions']:
         raise AuthError({
             'code': 'forbidden',
             'description': 'Request is forbidden.'
@@ -107,7 +107,7 @@ def get_rsa_key(token):
             'description': 'Invalid authorization API.'
         }, 422)
 
-    jwt_headers = jwt.get_unverified_headers()
+    jwt_headers = jwt.get_unverified_headers(token)
     if 'kid' not in jwt_headers:
         raise AuthError({
             'code': 'invalid_header',
@@ -150,7 +150,7 @@ def verify_decode_jwt(token):
         )
         return payload
 
-    except jwt.ExpireSignatureError:
+    except jwt.ExpiredSignatureError:
         raise AuthError({
             'code': 'expired_token',
             'description': 'Token has expired.'
@@ -176,7 +176,7 @@ def requires_auth(permission=''):
             token = get_token_auth_header()
             payload = verify_decode_jwt(token)
             check_permissions(permission, payload)
-            return f(payload, *args, **kwargs)
+            return f(*args, **kwargs)
 
         return wrapper
     return requires_auth_decorator
