@@ -68,14 +68,6 @@ def get_token_auth_header():
 
     return split_auth_header[1]
 
-
-'''
-    it should raise an AuthError if permissions are not included in the payload
-        !!NOTE check your RBAC settings in Auth0
-    it should raise an AuthError if the requested permission string is not in the payload permissions array
-    return true otherwise
-'''
-
 # Checks permission against the payload coming from Auth0.
 # For more: verify_decode_jwt()
 # Accepts: permission (string) and payload (dictionary).

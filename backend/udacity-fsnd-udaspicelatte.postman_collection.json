@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "e8ad44ee-7536-4901-913c-46e718d56d9f",
+		"_postman_id": "c8e426be-e595-49b1-acb6-65363782d7e0",
 		"name": "udacity-fsnd-udaspicelatte",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -93,7 +93,23 @@
 					],
 					"request": {
 						"method": "POST",
-						"header": [],
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t'title': 'test',\n\t'recipe': {\n\t\t'color': 'black'\n\t\t'part': 1\n\t}\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
 						"url": {
 							"raw": "{{host}}/drinks",
 							"host": [
@@ -124,15 +140,31 @@
 					],
 					"request": {
 						"method": "PATCH",
-						"header": [],
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t'title': 'Updated Coffee'\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
 						"url": {
-							"raw": "{{host}}/drinks/1",
+							"raw": "{{host}}/drinks/2",
 							"host": [
 								"{{host}}"
 							],
 							"path": [
 								"drinks",
-								"1"
+								"2"
 							]
 						}
 					},
@@ -170,7 +202,33 @@
 					},
 					"response": []
 				}
-			]
+			],
+			"auth": {
+				"type": "noauth"
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "40071341-9b4c-43fa-9515-7cc36a8be106",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "e846e6ad-b03c-40b8-a202-5aca13e07eda",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
 		},
 		{
 			"name": "barista",
@@ -197,6 +255,16 @@
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik5rVTBPVU0xTkVaRk9FRXpSa0k1TmtOR01rUkRSalUwT1RCRk5ESkRPVFkyTkRJeU5VWkdOZyJ9.eyJpc3MiOiJodHRwczovL2Rldi1qMzBvc2JnZi5hdXRoMC5jb20vIiwic3ViIjoiYXV0aDB8NWU1NWJlNDc2N2QxOTcwZTQ1OTU1MTNiIiwiYXVkIjoiZGV2IiwiaWF0IjoxNTgyNzU3Njc2LCJleHAiOjE1ODI3NjQ4NzYsImF6cCI6ImFjbkRHOUxQN00yVDVvRkNTcTF1d1VrcjZEM0V1eDhGIiwic2NvcGUiOiIiLCJwZXJtaXNzaW9ucyI6WyJnZXQ6ZHJpbmtzLWRldGFpbCJdfQ.P8JrTwPvoSCn9kKWZKLRC2VvNeJDczkGhFLi5Dy8O5OdZSGGu7bE0BUpJ6fnHV6uzQ3B_9Vcwaz5-0I2pGK7ItXq30B5ouU0MyGhFt2ET4xFkQPUzq2EXqC1iRTqRWtvj9sFsBKXDf1Jnx8oxhgeMQHkTmZj9I-cCmVTJmiZdMfDY_2YADEKhwak5oo8ZCurNX18RoMC0gdkr3xIjAgmkpSDvA45gv6CKmpvaJf2u6i-8YRJN4mOEjRqNjONOFHdtOQbe1Df6UZJGLp4pacidlu_GMWpPIS-hrN693QTYIAtsPUpDb3-cUP0mVtt2q0xB6IxL88mkHy2dt0dOcacDw",
+									"type": "string"
+								}
+							]
+						},
 						"method": "GET",
 						"header": [],
 						"url": {
@@ -353,7 +421,7 @@
 				"bearer": [
 					{
 						"key": "token",
-						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Ik4wTkNOVEEzTWpaQ1FUa3lRMEl6TmtORk0wWXhRVFUwT1RFMFFVVkNSRUpDT1RBME1EUXpOUSJ9.eyJpc3MiOiJodHRwczovL3VkYWNpdHktZnNuZC5hdXRoMC5jb20vIiwic3ViIjoiZ29vZ2xlLW9hdXRoMnwxMDY3MTQ4MTQ0MTcwNjk3MTI4OTMiLCJhdWQiOlsiZGV2IiwiaHR0cHM6Ly91ZGFjaXR5LWZzbmQuYXV0aDAuY29tL3VzZXJpbmZvIl0sImlhdCI6MTU2MDg5MDE2MCwiZXhwIjoxNTYwODk3MzYwLCJhenAiOiJPSjVwQk9ZSURFa09FVFVmUWo1ajdsSDZFTFcwMkd1MCIsInNjb3BlIjoib3BlbmlkIHByb2ZpbGUgZW1haWwiLCJwZXJtaXNzaW9ucyI6WyJnZXQ6ZHJpbmtzIiwiZ2V0OmRyaW5rcy1kZXRhaWwiXX0.j9ocW47_exQOkEa10ffh8eijGvrIMxnGRzCmbrXnfaN_8ULsgA7AnWYMtvP8RmPWvT9n8sReWnFuJajUHBUbnBO2GuJ4aM3-WDUBeJT0X_mpGUWs4lxaNTbIkWdiWPTsEiRnP3wT-dU_v3Olw2PB4UMajMIjSH-IdF2Y1CiJIOaM0gV44RGZRyRvj6C2_mOkMfoXxzw-HrVvTRCo1NcUPea5Bs04POni7azx-B7FstP_HLm0dEbbge4XbmovHwlIXknIoI8PbuGXeLBqE2hv8fErKFBuIykxzK0nErH5zSPCrkM-_9smb8TLGAH-E5j1KQb6SHDKtcV_QHnsUYFuXA",
+						"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik5rVTBPVU0xTkVaRk9FRXpSa0k1TmtOR01rUkRSalUwT1RCRk5ESkRPVFkyTkRJeU5VWkdOZyJ9.eyJpc3MiOiJodHRwczovL2Rldi1qMzBvc2JnZi5hdXRoMC5jb20vIiwic3ViIjoiYXV0aDB8NWU1NWJlNDc2N2QxOTcwZTQ1OTU1MTNiIiwiYXVkIjoiZGV2IiwiaWF0IjoxNTgyNzU3Njc2LCJleHAiOjE1ODI3NjQ4NzYsImF6cCI6ImFjbkRHOUxQN00yVDVvRkNTcTF1d1VrcjZEM0V1eDhGIiwic2NvcGUiOiIiLCJwZXJtaXNzaW9ucyI6WyJnZXQ6ZHJpbmtzLWRldGFpbCJdfQ.P8JrTwPvoSCn9kKWZKLRC2VvNeJDczkGhFLi5Dy8O5OdZSGGu7bE0BUpJ6fnHV6uzQ3B_9Vcwaz5-0I2pGK7ItXq30B5ouU0MyGhFt2ET4xFkQPUzq2EXqC1iRTqRWtvj9sFsBKXDf1Jnx8oxhgeMQHkTmZj9I-cCmVTJmiZdMfDY_2YADEKhwak5oo8ZCurNX18RoMC0gdkr3xIjAgmkpSDvA45gv6CKmpvaJf2u6i-8YRJN4mOEjRqNjONOFHdtOQbe1Df6UZJGLp4pacidlu_GMWpPIS-hrN693QTYIAtsPUpDb3-cUP0mVtt2q0xB6IxL88mkHy2dt0dOcacDw",
 						"type": "string"
 					}
 				]
@@ -379,7 +447,8 @@
 						]
 					}
 				}
-			]
+			],
+			"protocolProfileBehavior": {}
 		},
 		{
 			"name": "manager",
@@ -610,7 +679,8 @@
 						]
 					}
 				}
-			]
+			],
+			"protocolProfileBehavior": {}
 		}
 	],
 	"event": [
@@ -642,5 +712,6 @@
 			"value": "localhost:5000",
 			"type": "string"
 		}
-	]
+	],
+	"protocolProfileBehavior": {}
 }

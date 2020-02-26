@@ -56,7 +56,6 @@ def is_valid_recipe_part(part):
 # Endpoint for short-form of drinks menu.
 @app.route('/drinks', methods=['GET'])
 def get_drinks():
-    get_token_auth_header()
     drinks = Drink.query.all()
 
     if not drinks:
